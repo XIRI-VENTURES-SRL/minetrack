@@ -4,7 +4,7 @@ export function uPlotTooltipPlugin (onHover) {
   return {
     hooks: {
       init: u => {
-        element = u.root.querySelector('.over')
+        element = u.root.querySelector('.u-over')
 
         element.onmouseenter = () => onHover()
         element.onmouseleave = () => onHover()

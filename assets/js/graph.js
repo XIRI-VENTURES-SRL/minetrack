@@ -214,7 +214,6 @@ export class GraphDisplayManager {
     const tickCount = 10
     const maxFactor = 4
 
-    // eslint-disable-next-line new-cap
     this._plotInstance = new uPlot({
       plugins: [
         uPlotTooltipPlugin((pos, idx) => {
@@ -276,7 +275,7 @@ export class GraphDisplayManager {
             stroke: '#333',
             width: 1
           },
-          split: () => {
+          splits: () => {
             const visibleGraphData = this.getVisibleGraphData()
             const { scaledMax, scale } = RelativeScale.scaleMatrix(visibleGraphData, tickCount, maxFactor)
             const ticks = RelativeScale.generateTicks(0, scaledMax, scale)
@@ -309,8 +308,13 @@ export class GraphDisplayManager {
     this.updateLocalStorage()
 
     // Copy application state into the series data used by uPlot
+    // uPlot#setSeries also toggles the series DOM state and re-evaluates the y scale
     for (const serverRegistration of this._app.serverRegistry.getServerRegistrations()) {
-      this._plotInstance.series[serverRegistration.getGraphDataIndex()].show = serverRegistration.isVisible
+      const seriesIndex = serverRegistration.getGraphDataIndex()
+
+      if (this._plotInstance.series[seriesIndex].show !== serverRegistration.isVisible) {
+        this._plotInstance.setSeries(seriesIndex, { show: serverRegistration.isVisible })
+      }
     }
 
     this._plotInstance.redraw()

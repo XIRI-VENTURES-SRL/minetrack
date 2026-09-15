@@ -81,7 +81,6 @@ export class ServerRegistration {
   buildPlotInstance () {
     const tickCount = 4
 
-    // eslint-disable-next-line new-cap
     this._plotInstance = new uPlot({
       plugins: [
         uPlotTooltipPlugin((pos, id) => {
@@ -139,7 +138,7 @@ export class ServerRegistration {
             stroke: '#333',
             width: 1
           },
-          split: () => {
+          splits: () => {
             const { scaledMin, scaledMax, scale } = RelativeScale.scale(this._graphData[1], tickCount)
             const ticks = RelativeScale.generateTicks(scaledMin, scaledMax, scale)
             return ticks
