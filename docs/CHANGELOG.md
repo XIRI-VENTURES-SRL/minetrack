@@ -1,3 +1,11 @@
+**Xiri Track** *(Sep 15 2026, based on Minetrack 5.6.1)*
+- Runtime: Node.js 24 LTS (requires >= 22.13). Dependencies updated (sqlite3 6, ws 8, uPlot 1.6, serve-static/finalhandler 2, Parcel 2.16, ESLint 10); unused `request` removed. `npm audit`: 34 vulnerabilities -> 0.
+- Security: a malformed WebSocket frame no longer crashes the process, incoming WebSocket messages are limited to 1 KiB, the history graph is sent once per connection, non-numeric player counts no longer overwrite records, server names are HTML-escaped, error responses never contain stack traces.
+- Persistence: `MINETRACK_DATABASE_FILE` / `databaseFile` and `MINETRACK_LOG_FILE` / `logFile` settings.
+- Operations: `GET /healthz`, graceful shutdown on SIGINT/SIGTERM, hardened multi-stage Docker image, `compose.yml` with a bind-mounted data directory, Caddy and nginx examples, `scripts/backup.sh`.
+- Configuration: tracks CrabbyMC and AshSMP, database logging enabled, 10 second ping interval with 8 second timeout, protocol versions up to 26.2.
+- Frontend: Xiri Track branding, "Total Players" card, "Default" sort that keeps the `servers.json` order, self-hosted Open Sans.
+
 **5.6.1** *(Oct 12 2021)*
 - Removed Mojang service status display, status.mojang.com/check was disabled by Mojang. See https://github.com/Cryptkeeper/Minetrack/issues/274
 
