@@ -1,7 +1,17 @@
+const sortByPlayerCount = (a, b) => b.playerCount - a.playerCount
+
 const SORT_OPTIONS = [
   {
+    // Keep the order defined in servers.json
+    getName: () => 'Default',
+    sortFunc: (a, b) => a.serverId - b.serverId,
+    // Ranks (#1, #2, ...) still reflect the current player counts
+    rankSortFunc: sortByPlayerCount,
+    highlightedValue: 'player-count'
+  },
+  {
     getName: () => 'Players',
-    sortFunc: (a, b) => b.playerCount - a.playerCount,
+    sortFunc: sortByPlayerCount,
     highlightedValue: 'player-count'
   },
   {
@@ -145,8 +155,23 @@ export class SortController {
     this.sortServers()
   }
 
+  updateRankIndexes (sortOption) {
+    // Rank using the sortOption ONLY so #isFavorite does not skew values
+    const rankIndexSort = this._app.serverRegistry.getServerRegistrations().sort(sortOption.rankSortFunc || sortOption.sortFunc)
+
+    rankIndexSort.forEach((serverRegistration, rankIndex) => {
+      serverRegistration.updateServerRankIndex(rankIndex)
+    })
+  }
+
   sortServers = () => {
     const sortOption = SORT_OPTIONS[this._sortOptionIndex]
+
+    // When the displayed order does not follow the ranking (e.g. "Default"),
+    // ranks can change while the order stays the same
+    if (sortOption.rankSortFunc) {
+      this.updateRankIndexes(sortOption)
+    }
 
     const sortedServers = this._app.serverRegistry.getServerRegistrations().sort((a, b) => {
       if (a.isFavorite && !b.isFavorite) {
@@ -181,19 +206,14 @@ export class SortController {
 
     this._lastSortedServers = sortedServerIds
 
-    // Sort a ServerRegistration list by the sortOption ONLY
-    // This is used to determine the ServerRegistration's rankIndex without #isFavorite skewing values
-    const rankIndexSort = this._app.serverRegistry.getServerRegistrations().sort(sortOption.sortFunc)
-
     // Update the DOM structure
     sortedServers.forEach(function (serverRegistration) {
       const parentElement = document.getElementById('server-list')
       const serverElement = document.getElementById(`container_${serverRegistration.serverId}`)
 
       parentElement.appendChild(serverElement)
-
-      // Set the ServerRegistration's rankIndex to its indexOf the normal sort
-      serverRegistration.updateServerRankIndex(rankIndexSort.indexOf(serverRegistration))
     })
+
+    this.updateRankIndexes(sortOption)
   }
 }

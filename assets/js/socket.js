@@ -106,9 +106,9 @@ export class SocketManager {
           let lastRowCounter = 0
           let controlsHTML = ''
 
+          // Registrations are returned in the order defined in servers.json
           this._app.serverRegistry.getServerRegistrations()
             .map(serverRegistration => serverRegistration.data.name)
-            .sort()
             .forEach(serverName => {
               const serverRegistration = this._app.serverRegistry.getServerRegistration(serverName)
 

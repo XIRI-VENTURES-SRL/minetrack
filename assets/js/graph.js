@@ -226,7 +226,8 @@ export class GraphDisplayManager {
                 if (a.isFavorite !== b.isFavorite) {
                   return a.isFavorite ? -1 : 1
                 } else {
-                  return a.data.name.localeCompare(b.data.name)
+                  // Follow the order defined in servers.json
+                  return a.serverId - b.serverId
                 }
               })
               .map(serverRegistration => {

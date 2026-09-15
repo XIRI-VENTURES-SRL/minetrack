@@ -5,7 +5,8 @@ import { RelativeScale } from './scale'
 import { escapeHtml, formatNumber, formatTimestampSeconds, formatDate, formatMinecraftServerAddress, formatMinecraftVersions } from './util'
 import { uPlotTooltipPlugin } from './plugins'
 
-import MISSING_FAVICON from 'url:../images/missing_favicon.svg'
+// Inlined as a data URL: a url: reference makes Parcel emit an inline import map, which a strict CSP blocks
+import MISSING_FAVICON from 'data-url:../images/missing_favicon.svg'
 
 export class ServerRegistry {
   constructor (app) {

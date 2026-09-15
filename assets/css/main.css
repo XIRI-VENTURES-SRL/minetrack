@@ -1,5 +1,9 @@
 @import url(npm:uplot/dist/uPlot.min.css);
 
+/* Self-hosted Open Sans, avoids loading fonts from a third party */
+@import url(npm:@fontsource/open-sans/latin-300.css);
+@import url(npm:@fontsource/open-sans/latin-700.css);
+
 @import url(../css/icons.css);
 
 * {
@@ -299,6 +303,36 @@ footer a:hover {
 /* Global stats */
 .global-stat {
   font-weight: 700;
+}
+
+/* Total players card, same height as the header buttons next to it */
+header .header-stat,
+header .header-button {
+  vertical-align: top;
+}
+
+header .header-stat {
+  display: inline-block;
+  box-sizing: border-box;
+  min-width: 130px;
+  height: 83px;
+  padding: 0 15px;
+  text-align: center;
+  background: var(--background-color);
+  color: var(--text-color);
+  border-radius: var(--border-radius);
+}
+
+header .header-stat-label {
+  display: block;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+header .header-stat-value {
+  display: block;
+  font-size: 32px;
+  line-height: 40px;
 }
 
 /* Sort by */
