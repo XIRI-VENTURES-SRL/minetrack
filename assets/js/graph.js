@@ -204,7 +204,8 @@ export class GraphDisplayManager {
         width: 2,
         value: (_, raw) => `${formatNumber(raw)} Players`,
         show: serverRegistration.isVisible,
-        spanGaps: true,
+        // Buckets without any valid ping are shown as gaps, not bridged with a line
+        spanGaps: false,
         points: {
           show: false
         }

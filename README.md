@@ -37,7 +37,9 @@ A single Node.js process:
 - pings every server in `servers.json` every `rates.pingAll` milliseconds (Minecraft status protocol, SRV records supported),
 - stores every result in SQLite (`pings` table) and keeps the all-time record per server (`players_record` table),
 - serves the dashboard (bundled from `assets/` into `dist/` by Parcel) and pushes live updates to browsers over a WebSocket on the same port,
-- rebuilds the last 24 hours of the graph from the database on startup.
+- rebuilds the last 24 hours of the history graph from the database on startup.
+
+The history graph shows one point per 5 minute bucket: the median of the valid pings in that bucket, so short spikes do not distort it. A bucket without any valid ping (an outage, or no history yet) is a gap, never an interpolated value. Only the display is aggregated; every ping stays stored. The 24h peak is the highest single valid ping, and the small per-server graphs show the raw pings of the last 10 minutes.
 
 Endpoints: `/` and static assets, the WebSocket (same URL), and `GET /healthz` (`200 {"status":"ok"}` while ping rounds complete, `503` otherwise). There is no admin interface.
 

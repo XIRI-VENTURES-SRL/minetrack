@@ -85,9 +85,11 @@ export class SocketManager {
             }
           }
 
-          // Bulk add playerCounts into graph during #updateHistoryGraph
-          if (payload.updateHistoryGraph) {
-            this._app.graphDisplayManager.addGraphPoint(payload.timestamp, Object.values(payload.updates).map(update => update.playerCount))
+          // Add the history graph buckets this update completed, each with the median value of every server
+          if (payload.graphTimestamps && payload.graphTimestamps.length > 0) {
+            payload.graphTimestamps.forEach((graphTimestamp, index) => {
+              this._app.graphDisplayManager.addGraphPoint(graphTimestamp, Object.values(payload.updates).map(update => update.graphValues ? update.graphValues[index] : null))
+            })
 
             // Run redraw tasks after handling bulk updates
             this._app.graphDisplayManager.redraw()
