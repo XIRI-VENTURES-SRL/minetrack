@@ -39,7 +39,8 @@ const MINUTE_MS = 60 * 1000
 const MAX_PLAYER_COUNT = 250000 // same cap as lib/ping.js
 const EARLIEST_ALLOWED_MS = Date.UTC(2026, 0, 1)
 const PAGE_SIZE = 1000
-const TRACKER_RUNNING_MS = 45 * 1000
+// Wait longer than one ping interval when checking that Minetrack is stopped
+const TRACKER_CHECK_MS = Math.max(15 * 1000, Math.round(require(path.join(__dirname, '..', 'config.json')).rates.pingAll * 1.5))
 
 const DATABASE_FILE = process.env.MINETRACK_DATABASE_FILE || path.join(__dirname, '..', 'database.sql')
 
@@ -386,8 +387,14 @@ async function importHistory (options) {
 
     if (!options.apply) return
 
-    if (before.latest !== null && Date.now() - before.latest < TRACKER_RUNNING_MS) {
-      fail(`${SERVER_KEY} was pinged ${Math.round((Date.now() - before.latest) / 1000)}s ago, Minetrack is still running. Stop the container first (it keeps the record in memory and would overwrite it).`)
+    // Minetrack writes pings every rates.pingAll milliseconds while it runs. It must be stopped: it keeps the
+    // record in memory and would overwrite the imported record. A stopped tracker writes nothing new while we wait.
+    const latestPing = async () => (await dbGet(db, 'SELECT MAX(timestamp) AS latest FROM pings')).latest
+    const latestBeforeWait = await latestPing()
+    console.log(`checking for ${TRACKER_CHECK_MS / 1000}s that Minetrack is not writing pings...`)
+    await new Promise((resolve) => setTimeout(resolve, TRACKER_CHECK_MS))
+    if (await latestPing() !== latestBeforeWait) {
+      fail('New pings were written while waiting, Minetrack is still running. Stop the container first (it keeps the record in memory and would overwrite it).')
     }
 
     await dbRun(db, 'BEGIN IMMEDIATE')
