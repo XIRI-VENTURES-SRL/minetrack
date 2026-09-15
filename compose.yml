@@ -1,0 +1,38 @@
+name: xiri-track
+
+services:
+  minetrack:
+    build: .
+    image: xiri-track:latest
+    restart: unless-stopped
+    environment:
+      MINETRACK_DATABASE_FILE: /data/database.sql
+      # Log to stdout only; Docker collects and rotates it (see logging below)
+      MINETRACK_LOG_FILE: ""
+    ports:
+      # Only reachable from the host itself. The reverse proxy (Caddy/nginx) handles public traffic.
+      - "127.0.0.1:8080:8080"
+    volumes:
+      # Persistent SQLite data on the host. Survives rebuilds, restarts and `docker compose down`.
+      # The directory must exist and be writable by uid 1000 (see README), Docker will not create it.
+      - type: bind
+        source: ./data
+        target: /data
+        bind:
+          create_host_path: false
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

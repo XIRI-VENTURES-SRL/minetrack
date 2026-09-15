@@ -1,9 +1,21 @@
-docs/
-scripts/
-.gitignore
-.dockerignore
-docker-compose.yml
-Dockerfile
+# Keep local data, logs, secrets, caches and repository metadata out of the image
+.git
+.github
 node_modules
-npm-debug.log
+dist
+.parcel-cache
+data
+database.sql*
+database_copy_*.sql
+*.log
+.env
+.env.*
+
+# Not needed to build or run Minetrack
+docs
+deploy
+scripts
+compose.yml
+Dockerfile
+.dockerignore
 README.md

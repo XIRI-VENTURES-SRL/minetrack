@@ -1,0 +1,25 @@
+# Xiri Track behind Caddy running on the Docker host.
+#
+# Minetrack only listens on 127.0.0.1:8080 (see compose.yml).
+# Caddy's reverse_proxy forwards WebSocket upgrades automatically, no extra configuration is needed.
+#
+# TLS: with the Cloudflare record proxied (orange cloud) and SSL/TLS mode "Full (strict)",
+# Caddy obtains a publicly trusted certificate through the HTTP-01 challenge on port 80.
+# Alternatively use a Cloudflare Origin CA certificate:
+#   tls /etc/caddy/certs/track.xiri.ventures.pem /etc/caddy/certs/track.xiri.ventures.key
+
+track.xiri.ventures {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' wss://track.xiri.ventures; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'"
+		-Server
+	}
+
+	reverse_proxy 127.0.0.1:8080
+}
