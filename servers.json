@@ -1,12 +1,14 @@
 [
 	{
-		"name": "Hypixel",
-		"ip": "mc.hypixel.net",
-		"type": "PC"
+		"name": "CrabbyMC",
+		"ip": "play.crabbymc.fun",
+		"type": "PC",
+		"color": "#FF7A45"
 	},
 	{
-		"name": "CubeCraft",
-		"ip": "play.cubecraft.net",
-		"type": "PC"
+		"name": "AshSMP",
+		"ip": "play.ashsmp.in",
+		"type": "PC",
+		"color": "#5EC8F2"
 	}
 ]

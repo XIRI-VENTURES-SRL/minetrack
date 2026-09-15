@@ -4,15 +4,15 @@
 		"ip": "0.0.0.0"
 	},
 	"rates": {
-		"pingAll": 3000,
-		"connectTimeout": 2500
+		"pingAll": 10000,
+		"connectTimeout": 5000
 	},
 	"oldPingsCleanup": {
 		"enabled": false,
 		"interval": 3600000
 	},
 	"logFailedPings": true,
-	"logToDatabase": false,
+	"logToDatabase": true,
 	"graphDuration": 86400000,
-	"serverGraphDuration": 180000
+	"serverGraphDuration": 600000
 }
