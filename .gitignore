@@ -14,3 +14,12 @@ database.sql-journal
 # parcel
 dist/
 .parcel-cache/
+database.sql-wal
+database.sql-shm
+database_copy_*.sql
+
+# docker bind-mounted persistent data
+data/
+
+# local environment overrides
+.env

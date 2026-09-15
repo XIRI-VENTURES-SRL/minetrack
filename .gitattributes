@@ -1,0 +1,8 @@
+# Keep LF line endings everywhere so shell scripts, the Dockerfile and
+# config files behave the same when checked out on Windows.
+* text=auto eol=lf
+
+*.png binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
