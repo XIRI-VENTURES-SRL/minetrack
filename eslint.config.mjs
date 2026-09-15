@@ -16,8 +16,8 @@ export default [
     }
   },
   {
-    // Backend, run directly by Node.js
-    files: ['main.js', 'lib/**/*.js'],
+    // Backend and maintenance scripts, run directly by Node.js
+    files: ['main.js', 'lib/**/*.js', 'scripts/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'commonjs',
