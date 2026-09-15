@@ -18,12 +18,14 @@ cd "$(dirname "$0")/.."
 KEEP="${KEEP:-14}"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 
+# stdin comes from /dev/null: docker compose exec keeps stdin attached even with -T and would
+# otherwise swallow the caller's remaining input (e.g. a script piped over ssh or a while-read loop)
 docker compose exec -T minetrack sh -eu -c "
   mkdir -p /data/backups
   sqlite3 /data/database.sql \".backup '/data/backups/database-$STAMP.sql'\"
   sqlite3 '/data/backups/database-$STAMP.sql' 'PRAGMA integrity_check' | grep -qx ok
   gzip '/data/backups/database-$STAMP.sql'
   ls -1t /data/backups/database-*.sql.gz | tail -n +$((KEEP + 1)) | xargs -r rm --
-"
+" < /dev/null
 
 echo "Backup written to data/backups/database-$STAMP.sql.gz"
