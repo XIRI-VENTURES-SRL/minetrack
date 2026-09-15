@@ -39,3 +39,18 @@ if (!config.logToDatabase) {
     app.handleReady()
   })
 }
+
+// Close connections and the database cleanly when stopped, e.g. by `docker stop`
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.once(signal, () => {
+    logger.log('info', 'Received %s, shutting down', signal)
+
+    // Never hang forever if something refuses to close
+    setTimeout(() => process.exit(1), 10 * 1000).unref()
+
+    app.shutdown(() => {
+      logger.log('info', 'Shutdown complete')
+      process.exit(0)
+    })
+  })
+}
