@@ -22,6 +22,14 @@ Each network has its own history, peak and record. A "Total Players" card in the
 
 `play.ashsmp.in` is a CNAME to the GrootShield DDoS protection service (`shield.grootop.in`). Intermittently (around one in five pings during testing) the shield cannot reach the AshSMP backend and, after ~5 seconds, answers with its own "Server Offline or Invalid hostname" status without a player count. Those pings are stored as failed pings (small gaps in the graphs), they do not affect peaks or records. `rates.connectTimeout` is 8 seconds so this fallback is received and logged as an invalid player count instead of a generic socket timeout.
 
+### History and data provenance
+
+- **From 2026-09-15 08:45:40 UTC** (Xiri Track launch): all data for both networks is collected directly by Xiri Track, a ping every 10 seconds.
+- **CrabbyMC before that** (from its first day online, 2026-08-11): concurrent player counts **imported once from CrabbyDashboard** (per-server heartbeats aggregated to one value per minute). Unique player counts were not imported.
+- **AshSMP** is not backfilled; its history starts at the Xiri Track launch.
+
+Source, aggregation rule, validation and the reusable import procedure are documented in [docs/IMPORT-CRABBY-HISTORY.md](docs/IMPORT-CRABBY-HISTORY.md).
+
 ## How it works
 
 A single Node.js process:

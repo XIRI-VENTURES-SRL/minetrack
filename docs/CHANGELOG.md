@@ -4,7 +4,10 @@
 - Persistence: `MINETRACK_DATABASE_FILE` / `databaseFile` and `MINETRACK_LOG_FILE` / `logFile` settings.
 - Operations: `GET /healthz`, graceful shutdown on SIGINT/SIGTERM, hardened multi-stage Docker image, `compose.yml` with a bind-mounted data directory, Caddy and nginx examples, `scripts/backup.sh`.
 - Configuration: tracks CrabbyMC and AshSMP, database logging enabled, 10 second ping interval with 8 second timeout, protocol versions up to 26.2.
-- Frontend: Xiri Track branding, "Total Players" card, "Default" sort that keeps the `servers.json` order, self-hosted Open Sans.
+- Frontend: Xiri Track branding, "Total Players" card, "Default" sort that keeps the `servers.json` order, self-hosted Open Sans, no attribution footer (attribution stays in `LICENSE` and the README).
+- Frontend: advertised version lists with gaps are shown as one compact range (e.g. `1.7.2–26.2`); the last valid player count is kept for up to two failed or invalid pings before a server is shown as "Unavailable". Display only, failed pings are still stored as failures.
+- History graph: servers without a ping at a shared timestamp get a gap instead of shifting the graph, so the 24h peak time stays correct when history exists for only some servers.
+- Data: historical CrabbyMC concurrent player counts before the Xiri Track launch imported from CrabbyDashboard with `scripts/import-crabby-history.js`, see [IMPORT-CRABBY-HISTORY.md](IMPORT-CRABBY-HISTORY.md).
 
 **5.6.1** *(Oct 12 2021)*
 - Removed Mojang service status display, status.mojang.com/check was disabled by Mojang. See https://github.com/Cryptkeeper/Minetrack/issues/274
