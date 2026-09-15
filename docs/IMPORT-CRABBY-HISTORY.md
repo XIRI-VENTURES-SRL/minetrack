@@ -35,15 +35,41 @@ Minutes in which no instant has a recent report are omitted, so outages remain g
 
 Why this rule:
 
-- **Maximum per minute** keeps real peaks, which matters for the 24h peak and the all-time record. A single sample per minute understated volatile minutes badly (e.g. 38 instead of 109 players on 2026-08-27 16:05).
-- **The lowest recent report per server** prevents counting players twice. Server heartbeats are not synchronised: when a server restarts or players move between servers, one server may already report the players while another still reports them. Summing the latest reports produced false spikes (e.g. 68 instead of 47 when the economy server restarted on 2026-09-06 12:00, and a false 142 record on 2026-08-27 where session data shows 138).
+- **Maximum per minute** keeps real peaks, which matters for the 24h peak and the all-time record. A single sample per minute understated volatile minutes badly.
+- **The lowest recent report per server** prevents counting players twice. Server heartbeats are not synchronised: when a server restarts or players move between servers, one server may already report the players while another still reports them. Summing the latest reports produced false spikes (e.g. 68 instead of 47 when the economy server restarted on 2026-09-06 12:00).
 - **7 seconds** is a little over two heartbeat intervals, so a server that stops reporting is treated as offline almost immediately.
 
 Validation:
 
 - Against **Xiri Track's own live pings** in the overlap period 2026-09-15 08:46 to 09:30 UTC: the rule matched Xiri Track's per-minute maximum exactly in 37 of 45 minutes and within 1 player in 44 of 45 (tendency to read 1 low when players join).
-- Against **CrabbyDashboard session concurrency** (distinct players online) during the busiest surge (2026-08-27 15:59 to 16:12 UTC): within 0 to 3 players, peak 138 against 138/139.
+- Against **CrabbyDashboard session concurrency** (distinct players online) during the 2026-08-27 15:59 to 16:12 UTC surge: within 0 to 3 players. Both sources counted the same connections, which turned out to be a bot join flood (see "Rejected minutes" below), so this only confirms the aggregation, not that the players were real.
 - Remaining known deviation: 56 against 50 session players for one minute during the 2026-09-06 12:02 event start.
+
+## Rejected minutes: transient surges
+
+`import` and `prune` reject minutes that belong to a transient surge. A minute is part of one when
+
+1. its count is at least **twice**, and at least **30 players above**, the median of the preceding 60 minutes (at least 30 minutes of history are required; minutes already rejected are left out), and
+2. the count is back at or below **1.5 times** that median within **30 minutes**.
+
+Elevated minutes directly before the jump (above 1.25 times the median) belong to the same surge. Rejected minutes are not imported and do not count for the record. They stay a gap; nothing is estimated in their place. Real growth, events and launches build up or stay up and are not rejected: across all 50,286 exported minutes the rule rejects only the 11 minutes below. The thresholds are constants at the top of `scripts/import-crabby-history.js`.
+
+### 2026-08-27 16:01 to 16:11 UTC: bot join flood
+
+| UTC | 15:59 | 16:00 | 16:01 | 16:02 | 16:03 | 16:04 | 16:05 | 16:06 | 16:07 | 16:08 | 16:09 | 16:10 | 16:11 | 16:12 | 16:13 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Exported players | 30 | 28 | **54** | **82** | **80** | **123** | **107** | **137** | **137** | **136** | **137** | **137** | **138** | 26 | 27 |
+
+These minutes produced the imported record of 138. They are not an aggregation or import error: the values match CrabbyDashboard's raw heartbeats and its session data. The connections were not real players:
+
+- **Heartbeats**: no duplicate or malformed rows, normal reporting cadence, and `online_players` is a concurrent count per server. Before 16:01 the lobby reported 0 to 3 players and economy 25 to 34. From 16:01 the lobby alone climbed to 112 (at 16:05 from 14 to 70 within 27 seconds) and dropped to 0 at 16:11; economy rose to a flat 49 from 16:07 to 16:10.
+- **`player_sessions`** joined 15:55 to 16:12: 486 sessions from 132 identities, 410 of them shorter than 2 minutes. Joins rose to 41 to 90 per minute, with 113 (16:04) and 131 (16:11) disconnects within one minute. The busiest minute from 13:30 to 15:50 had 32 disconnects.
+- **Names** look random (`jbf3su3eoc5`, `ppaz77fgdf`, `7qdv6b`, `n2aib`, `caajs0g3mc5r`), and only 9 of the 125 flood identities (7%) ever appeared again, against 89 of 164 (54%) of the players of the same afternoon.
+- Session flags (no UUID, non-premium, country `XX`) are the same for normal players of that period, a limitation of the older session telemetry, so they were not used as evidence.
+
+Some real players were online during the flood as well, but their number cannot be separated reliably, so the 11 minutes are rejected entirely instead of being replaced with an estimate.
+
+The highest accepted minute is **76 players at 2026-08-27 13:47 UTC**: the economy server reported 74 to 76 players after a rise from 59 at 13:44, the count stayed at 70 to 73 afterwards, and there was no lobby spike or join flood.
 
 ## Procedure
 
@@ -68,7 +94,7 @@ Run on the VPS in `/opt/xiri-track`. `scripts/` is not part of the image, so it 
      minetrack node scripts/import-crabby-history.js import --in /data/import/crabbymc-history.csv < /dev/null
    ```
 
-3. Stop Minetrack, take a verified backup, apply, start Minetrack. Minetrack keeps the player record in memory, so it must not run during the import, otherwise it could overwrite the imported record. The script refuses to apply if a ping was written in the last 45 seconds.
+3. Stop Minetrack, take a verified backup, apply, start Minetrack. Minetrack keeps the player record in memory, so it must not run during the import, otherwise it could overwrite the imported record. The script waits 15 seconds and refuses to apply if a new ping is written in that time.
 
    ```bash
    docker compose stop minetrack
@@ -78,13 +104,22 @@ Run on the VPS in `/opt/xiri-track`. `scripts/` is not part of the image, so it 
    docker compose up -d
    ```
 
-The import validates every row (whole-minute timestamps, integer counts between 0 and 250,000, no duplicates, all before the cutoff), refuses existing non-imported rows inside the import range, inserts in a single transaction, and skips rows that already exist, so running it again inserts nothing. Afterwards it checks `PRAGMA integrity_check`, that there are no duplicate CrabbyMC timestamps and that the other servers' rows are unchanged. CrabbyMC's `players_record` is set to the higher of the imported maximum and the existing record; AshSMP's record is not touched.
+4. To remove minutes of an earlier import that the current validation rejects, use `prune`. Without `--apply` it lists every stored row it would remove with the reason, and the record it would recompute:
+
+   ```bash
+   docker compose run --rm --no-deps -T -v /opt/xiri-track/scripts:/app/scripts:ro \
+     minetrack node scripts/import-crabby-history.js prune --in /data/import/crabbymc-history.csv < /dev/null
+   ```
+
+   To apply, stop Minetrack, take a backup and run it with `--apply`, as in step 3. It deletes only `play.crabbymc.fun` rows before the start of live tracking whose timestamp and value match a rejected minute of the export, in a single transaction, then sets CrabbyMC's record to its highest remaining valid ping (the earliest one on a tie) and runs the same checks as `import`.
+
+The import validates every row (whole-minute timestamps, integer counts between 0 and 250,000, no duplicates, all before the cutoff), skips minutes rejected as transient surges, refuses existing non-imported rows inside the import range, inserts in a single transaction, and skips rows that already exist, so running it again inserts nothing. Afterwards it checks `PRAGMA integrity_check`, that there are no duplicate CrabbyMC timestamps and that the other servers' rows are unchanged. CrabbyMC's `players_record` is set to the higher of the highest accepted minute and the existing record; AshSMP's record is not touched.
 
 To undo the import, stop Minetrack and copy the `database-pre-crabby-import-*.sql` backup back to `data/database.sql` (see "Restore" in the README).
 
 ## Caveats
 
-- Imported history has one value per minute; live history has a ping every 10 seconds. Graphs show both the same way (one point per minute).
+- Imported history has one value per minute; live history has a ping every 10 seconds. The history graph shows both the same way: the median of each 5 minute bucket. For imported history that is the median of up to five minute maxima, for live history the median of up to 30 pings.
 - Imported values count players connected to the network's backend servers. Players still connecting through the proxy but not yet on a server are not included, and a heartbeat outage of a single server undercounts until it reports again.
 - During abrupt mass transitions (server restarts, event starts) a minute can still be a few players off, see the validation above.
 - The minutes in which Minetrack was stopped for the import are a gap in the live history.
