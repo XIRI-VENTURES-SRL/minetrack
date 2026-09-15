@@ -183,6 +183,22 @@
 		{
 			"name": "1.21.8",
 			"protocolId": 772
+		},
+		{
+			"name": "1.21.10",
+			"protocolId": 773
+		},
+		{
+			"name": "1.21.11",
+			"protocolId": 774
+		},
+		{
+			"name": "26.1.2",
+			"protocolId": 775
+		},
+		{
+			"name": "26.2",
+			"protocolId": 776
 		}
 	]
 }
