@@ -93,6 +93,15 @@ export function formatMinecraftVersions (versions, knownVersions) {
     return
   }
 
+  // Gaps mostly come from individual version probes that failed (e.g. behind DDoS protection) and turn into
+  // long lists like "1.7.2-1.11, 1.12-1.12.2, ..." that wrap across lines.
+  // Show those as one compact range from the oldest to the newest advertised version.
+  if (versionGroups.length > 1) {
+    const lastVersionGroup = versionGroups[versionGroups.length - 1]
+
+    return `${knownVersions[versionGroups[0][0]]}–${knownVersions[lastVersionGroup[lastVersionGroup.length - 1]]}`
+  }
+
   // Remap individual versionGroups values into named versions
   return versionGroups.map(versionGroup => {
     const startVersion = knownVersions[versionGroup[0]]
