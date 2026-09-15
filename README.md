@@ -25,7 +25,7 @@ Each network has its own history, peak and record. A "Total Players" card in the
 ### History and data provenance
 
 - **From 2026-09-15 08:45:40 UTC** (Xiri Track launch): all data for both networks is collected directly by Xiri Track, a ping every 10 seconds.
-- **CrabbyMC before that** (from its first day online, 2026-08-11): concurrent player counts **imported once from CrabbyDashboard** (per-server heartbeats aggregated to one value per minute). Unique player counts were not imported.
+- **CrabbyMC before that** (from its first day online, 2026-08-11): concurrent player counts **imported once from CrabbyDashboard** (per-server heartbeats aggregated to one value per minute). Unique player counts were not imported. The 11 minutes of a bot join flood on 2026-08-27 16:01–16:11 UTC were removed and left as a gap, and the record was recomputed from the remaining data (138 → 76).
 - **AshSMP** is not backfilled; its history starts at the Xiri Track launch.
 
 Source, aggregation rule, validation and the reusable import procedure are documented in [docs/IMPORT-CRABBY-HISTORY.md](docs/IMPORT-CRABBY-HISTORY.md).

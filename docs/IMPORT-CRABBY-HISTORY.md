@@ -9,7 +9,7 @@ Xiri Track started tracking both networks on **2026-09-15 08:45:40 UTC**. To sho
 | 2026-08-11 09:07 to 2026-09-15 08:45 | **Imported from CrabbyDashboard**, one value per minute | no data (not backfilled) |
 | from 2026-09-15 08:45:40 | **Collected by Xiri Track**, a ping every 10 seconds | **Collected by Xiri Track**, a ping every 10 seconds |
 
-Imported rows can be recognised in the `pings` table: they belong to `play.crabbymc.fun`, lie before `1789461940315` (the first live ping) and their timestamps are whole minutes. Unique player counts were not imported; they are a separate metric in CrabbyDashboard.
+Imported rows can be recognised in the `pings` table: they belong to `play.crabbymc.fun`, lie before `1789461940315` (the first live ping) and their timestamps are whole minutes. Unique player counts were not imported; they are a separate metric in CrabbyDashboard. The 11 minutes of a bot join flood on 2026-08-27 16:01 to 16:11 UTC were removed afterwards and are a gap, see "Correction" below.
 
 ## Source
 
@@ -60,7 +60,7 @@ Elevated minutes directly before the jump (above 1.25 times the median) belong t
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Exported players | 30 | 28 | **54** | **82** | **80** | **123** | **107** | **137** | **137** | **136** | **137** | **137** | **138** | 26 | 27 |
 
-These minutes produced the imported record of 138. They are not an aggregation or import error: the values match CrabbyDashboard's raw heartbeats and its session data. The connections were not real players:
+These minutes produced the imported record of 138 and were removed on 2026-09-15 (see "Correction" below). They are not an aggregation or import error: the values match CrabbyDashboard's raw heartbeats and its session data. The connections were not real players:
 
 - **Heartbeats**: no duplicate or malformed rows, normal reporting cadence, and `online_players` is a concurrent count per server. Before 16:01 the lobby reported 0 to 3 players and economy 25 to 34. From 16:01 the lobby alone climbed to 112 (at 16:05 from 14 to 70 within 27 seconds) and dropped to 0 at 16:11; economy rose to a flat 49 from 16:07 to 16:10.
 - **`player_sessions`** joined 15:55 to 16:12: 486 sessions from 132 identities, 410 of them shorter than 2 minutes. Joins rose to 41 to 90 per minute, with 113 (16:04) and 131 (16:11) disconnects within one minute. The busiest minute from 13:30 to 15:50 had 32 disconnects.
@@ -133,12 +133,30 @@ To undo the import, stop Minetrack and copy the `database-pre-crabby-import-*.sq
 | Rows inserted / skipped | 50,286 / 0 |
 | Gaps in the imported history | one: 92 minutes on 2026-08-27 12:00 to 13:31 UTC, no server sent heartbeats |
 | CrabbyMC earliest ping | before 2026-09-15 08:45:40.315 UTC, after 2026-08-11 09:07:00 UTC |
-| CrabbyMC record | before 22 (2026-09-15 10:00:50 UTC), after **138** (2026-08-27 16:11 UTC) |
+| CrabbyMC record | before 22 (2026-09-15 10:00:50 UTC), after 138 (2026-08-27 16:11 UTC); corrected to **76** (2026-08-27 13:47 UTC), see "Correction" below |
 | AshSMP | rows and record unchanged (fingerprint compared before and after) |
-| Highest daily imported peaks | 2026-08-27: 138, 2026-09-06: 61, 2026-09-13: 56, 2026-08-30: 50 |
+| Highest daily imported peaks | 2026-08-27: 138 (76 after the correction), 2026-09-06: 61, 2026-09-13: 56, 2026-08-30: 50 |
 | Checks | `integrity_check` ok before and after, no duplicate timestamps, 42 minutes compared against values computed directly in CrabbyDashboard's database: all identical |
 | Backup before the import | `/opt/xiri-track/data/backups/database-pre-crabby-import-20260915T101219Z.sql` |
 | Tracker downtime | 2026-09-15 10:12:19 to 10:12:40 UTC |
 | Export file | `/opt/xiri-track/data/import/crabbymc-history.csv` |
 
 A first attempt at 10:03 UTC stopped before writing anything, because the running-tracker check misread a tracker that had been stopped seconds earlier (fixed in the script). Its backup, `database-pre-crabby-import-20260915T100316Z.sql`, is from before any import as well.
+
+## Correction (2026-09-15): bot join flood removed
+
+The minutes described in "Rejected minutes" were removed from the database with `prune --apply`, after a dry-run on the stopped database listed exactly the 11 rows below and nothing else. Nothing was interpolated or estimated in their place.
+
+| | |
+|---|---|
+| Rows removed | 11 `play.crabbymc.fun` rows, 2026-08-27 UTC: 16:01 = 54, 16:02 = 82, 16:03 = 80, 16:04 = 123, 16:05 = 107, 16:06 = 137, 16:07 = 137, 16:08 = 136, 16:09 = 137, 16:10 = 137, 16:11 = 138 |
+| Reason | Transient surge caused by a bot join flood: at least twice and 30 players above the preceding hour's median of 37 (16:01: elevated minute directly before the jump), back to 26 at 16:12 |
+| Rows changed or added | None. 16:01 to 16:11 is now a gap; 16:00 (28) and 16:12 (26) remain |
+| CrabbyMC rows | 51,459 before, 51,448 after; every other CrabbyMC row identical (SHA-256 over all rows outside the 11 minutes) |
+| CrabbyMC record | Before **138** (2026-08-27 16:11 UTC), after **76** (2026-08-27 13:47 UTC), recomputed as the highest remaining valid ping |
+| AshSMP | 1,173 rows and record 74 (2026-09-15 10:09:07 UTC) unchanged; SHA-256 over every row identical before and after |
+| Checks | `integrity_check` ok before and after, no duplicate CrabbyMC timestamps |
+| Backups | `data/backups/database-pre-surge-prune-20260915T120117Z.sql` (copy of the stopped database, SHA-256 equal to the original, integrity ok) and `data/backups/database-20260915T120117Z.sql.gz` (online backup taken just before stopping) |
+| Tracker downtime | 2026-09-15 12:01:17 to 12:01:37 UTC (clean shutdown on SIGTERM) |
+
+To undo the correction, stop Minetrack and restore `database-pre-surge-prune-20260915T120117Z.sql` (see "Restore" in the README); pings recorded after 12:01:37 UTC would be lost.
