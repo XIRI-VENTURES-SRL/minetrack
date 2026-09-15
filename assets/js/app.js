@@ -29,7 +29,6 @@ export class App {
 
   setPageReady (isReady) {
     document.getElementById('push').style.display = isReady ? 'block' : 'none'
-    document.getElementById('footer').style.display = isReady ? 'block' : 'none'
     document.getElementById('status-overlay').style.display = isReady ? 'none' : 'block'
   }
 
