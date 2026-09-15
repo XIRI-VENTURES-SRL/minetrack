@@ -2,7 +2,7 @@ import uPlot from 'uplot'
 
 import { RelativeScale } from './scale'
 
-import { formatNumber, formatTimestampSeconds } from './util'
+import { escapeHtml, formatNumber, formatTimestampSeconds } from './util'
 import { uPlotTooltipPlugin } from './plugins'
 
 import { FAVORITE_SERVERS_STORAGE_KEY } from './favorites'
@@ -232,7 +232,7 @@ export class GraphDisplayManager {
               .map(serverRegistration => {
                 const point = this.getGraphDataPoint(serverRegistration.serverId, idx)
 
-                let serverName = serverRegistration.data.name
+                let serverName = escapeHtml(serverRegistration.data.name)
                 if (closestSeriesIndex === serverRegistration.getGraphDataIndex()) {
                   serverName = `<strong>${serverName}</strong>`
                 }

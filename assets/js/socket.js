@@ -1,3 +1,5 @@
+import { escapeHtml } from './util'
+
 export class SocketManager {
   constructor (app) {
     this._app = app
@@ -112,7 +114,7 @@ export class SocketManager {
 
               controlsHTML += `<td><label>
                 <input type="checkbox" class="graph-control" minetrack-server-id="${serverRegistration.serverId}" ${serverRegistration.isVisible ? 'checked' : ''}>
-                ${serverName}
+                ${escapeHtml(serverName)}
                 </label></td>`
 
               // Occasionally break table rows using a magic number

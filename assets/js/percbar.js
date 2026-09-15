@@ -1,4 +1,4 @@
-import { formatNumber, formatPercent } from './util'
+import { escapeHtml, formatNumber, formatPercent } from './util'
 
 export class PercentageBar {
   constructor (app) {
@@ -59,7 +59,7 @@ export class PercentageBar {
 
     this._app.tooltip.set(event.target.offsetLeft, event.target.offsetTop, 10, this._parent.offsetTop + this._parent.offsetHeight + 10,
       `${typeof serverRegistration.rankIndex !== 'undefined' ? `#${serverRegistration.rankIndex + 1} ` : ''}
-      ${serverRegistration.data.name}<br>
+      ${escapeHtml(serverRegistration.data.name)}<br>
       ${formatNumber(serverRegistration.playerCount)} Players<br>
       <strong>${formatPercent(serverRegistration.playerCount, this._app.getTotalPlayerCount())}</strong>`)
   }

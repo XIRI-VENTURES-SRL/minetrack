@@ -43,6 +43,16 @@ export class Caption {
   }
 }
 
+// Escape values (e.g. server names from servers.json) before interpolating them into HTML strings
+export function escapeHtml (value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 // Minecraft Java Edition default server port: 25565
 // Minecraft Bedrock Edition default server port: 19132
 const MINECRAFT_DEFAULT_PORTS = [25565, 19132]
