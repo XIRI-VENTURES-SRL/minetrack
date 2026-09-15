@@ -161,22 +161,26 @@ export class ServerRegistration {
     }, this._graphData, document.getElementById(`chart_${this.serverId}`))
   }
 
+  // Consecutive failed or invalid pings after which a server is shown as unavailable
+  // Fewer failures keep showing the last valid player count, so a transient failure does not flicker the display
+  static UNAVAILABLE_AFTER_FAILED_PINGS = 3
+
   handlePing (payload, timestamp) {
     if (typeof payload.playerCount === 'number') {
       this.playerCount = payload.playerCount
+      this._hasValidPlayerCount = true
 
       // Reset failed ping counter to ensure the next connection error
       // doesn't instantly retrigger a layout change
       this._failedSequentialPings = 0
-    } else {
-      // Attempt to retain a copy of the cached playerCount for up to N failed pings
-      // This prevents minor connection issues from constantly reshuffling the layout
-      if (++this._failedSequentialPings > 5) {
-        this.playerCount = 0
-      }
+    } else if (++this._failedSequentialPings >= ServerRegistration.UNAVAILABLE_AFTER_FAILED_PINGS) {
+      // The last valid playerCount is retained during transient failures, which also keeps the
+      // total, percentage bar and sorting stable. An unavailable server no longer counts.
+      this.playerCount = 0
     }
 
     // Use payload.playerCount so nulls WILL be pushed into the graphing data
+    // Failed pings stay gaps in the graphs, the retained playerCount is only used for display
     this._graphData[0].push(timestamp)
     this._graphData[1].push(payload.playerCount)
 
@@ -220,6 +224,28 @@ export class ServerRegistration {
     element.style.display = 'none'
   }
 
+  restorePlayerCount (playerCountHistory) {
+    // Rebuild the failure state from the recent ping history sent on connect, in which failed pings are null:
+    // count the trailing failures and keep the most recent valid player count
+    this._failedSequentialPings = 0
+    this._hasValidPlayerCount = false
+    this.playerCount = 0
+
+    for (let i = playerCountHistory.length - 1; i >= 0; i--) {
+      if (typeof playerCountHistory[i] === 'number') {
+        this._hasValidPlayerCount = true
+
+        if (this._failedSequentialPings < ServerRegistration.UNAVAILABLE_AFTER_FAILED_PINGS) {
+          this.playerCount = playerCountHistory[i]
+        }
+
+        return
+      }
+
+      this._failedSequentialPings++
+    }
+  }
+
   updateServerStatus (ping, minecraftVersions) {
     if (ping.versions) {
       this._renderValue('version', formatMinecraftVersions(ping.versions, minecraftVersions[this.data.type]) || '')
@@ -247,18 +273,20 @@ export class ServerRegistration {
       this.lastPeakData = ping.graphPeakData
     }
 
-    if (ping.error) {
-      this._hideValue('player-count')
-      this._renderValue('error', ping.error.message)
-    } else if (typeof ping.playerCount !== 'number') {
-      this._hideValue('player-count')
-
-      // If the frontend has freshly connection, and the server's last ping was in error, it may not contain an error object
-      // In this case playerCount will safely be null, so provide a generic error message instead
-      this._renderValue('error', 'Failed to ping')
-    } else if (typeof ping.playerCount === 'number') {
+    if (typeof ping.playerCount === 'number') {
       this._hideValue('error')
       this._renderValue('player-count', formatNumber(ping.playerCount))
+    } else if (typeof ping.playerCount === 'undefined') {
+      // The backend has not completed a ping yet and sends a placeholder, e.g. "Pinging..."
+      this._hideValue('player-count')
+      this._renderValue('error', ping.error ? ping.error.message : 'Pinging...')
+    } else if (this._hasValidPlayerCount && this._failedSequentialPings < ServerRegistration.UNAVAILABLE_AFTER_FAILED_PINGS) {
+      // Transient failed or invalid ping: keep showing the last valid player count
+      this._hideValue('error')
+      this._renderValue('player-count', formatNumber(this.playerCount))
+    } else {
+      this._hideValue('player-count')
+      this._renderValue('error', 'Unavailable')
     }
 
     // An updated favicon has been sent, update the src
