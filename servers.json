@@ -10,5 +10,11 @@
 		"ip": "play.ashsmp.in",
 		"type": "PC",
 		"color": "#5EC8F2"
+	},
+	{
+		"name": "EssenceMC",
+		"ip": "essencemcc.minehut.gg",
+		"type": "PC",
+		"color": "#A66BFF"
 	}
 ]
