@@ -13,8 +13,9 @@
 	},
 	{
 		"name": "EssenceMC",
-		"ip": "essencemcc.minehut.gg",
+		"ip": "mc.essencemc.net",
 		"type": "PC",
-		"color": "#A66BFF"
+		"color": "#A66BFF",
+		"rejectMotd": "Server is offline."
 	}
 ]

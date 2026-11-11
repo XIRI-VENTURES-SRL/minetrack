@@ -79,6 +79,7 @@ No secrets are required. All configuration is committed to this repository.
 | `port`    | no       | Defaults to 25565 (`PC`) or 19132 (`PE`). An SRV record takes precedence for `PC`. |
 | `color`   | no       | Graph color, generated from the name when omitted. |
 | `favicon` | no       | File name inside a `favicons/` directory, overrides the server's own icon. |
+| `rejectMotd` | no    | `PC` only. A ping whose MOTD contains this text is stored as failed. Use it when a host proxy answers with a placeholder for a server it no longer routes, such as Minehut's `Server is offline.` page, which reports the whole network's player count. |
 
 The order of the file is the default order of the dashboard ("Sort By: Default"). Visitors can switch to sorting by players, 24h peak or record.
 
